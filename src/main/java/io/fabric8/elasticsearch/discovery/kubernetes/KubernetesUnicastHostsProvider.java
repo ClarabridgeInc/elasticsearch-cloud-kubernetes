@@ -46,7 +46,7 @@ public class KubernetesUnicastHostsProvider extends AbstractComponent implements
   private TransportService transportService;
   private NetworkService networkService;
   private long lastRefresh;
-  private List<DiscoveryNode> cachedDiscoNodes;
+  private List<TransportAddress> cachedDiscoNodes;
 
   public KubernetesUnicastHostsProvider(Settings settings,
                                         KubernetesAPIService kubernetesAPIService,
@@ -62,33 +62,24 @@ public class KubernetesUnicastHostsProvider extends AbstractComponent implements
     this.serviceName = KubernetesAPIService.SERVICE_NAME_SETTING.get(settings);
   }
 
-  /**
-   * We build the list of Nodes from Kubernetes API
-   * Information can be cached using `plugins.refresh_interval` property if needed.
-   * Setting `plugins.refresh_interval` to `-1` will cause infinite caching.
-   * Setting `plugins.refresh_interval` to `0` will disable caching (default).
-   */
   @Override
-  public List<DiscoveryNode> buildDynamicNodes() {
-    final List<DiscoveryNode> result = new ArrayList<>();
+  public List<TransportAddress> buildDynamicHosts(HostsResolver hostsResolver) {
+    final List<TransportAddress> result = new ArrayList<>();
     // ES permission you should check before doPrivileged() blocks
     SecurityManager sm = System.getSecurityManager();
     if (sm != null) {
       sm.checkPermission(new SpecialPermission());
     }
 
-    AccessController.doPrivileged(new PrivilegedAction<Void>() {
-      @Override
-      public Void run() {
-        result.addAll(readNodes());
-        return null;
-      }
+    AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+      result.addAll(readNodes());
+      return null;
     });
 
     return result;
   }
 
-  private List<DiscoveryNode> readNodes() {
+  private List<TransportAddress> readNodes() {
 
     if (refreshInterval.millis() != 0) {
       if (cachedDiscoNodes != null &&
@@ -138,7 +129,7 @@ public class KubernetesUnicastHostsProvider extends AbstractComponent implements
 
                     for (TransportAddress transportAddress : addresses) {
                       logger.info("adding endpoint {}, transport_address {}", endpointAddress, transportAddress);
-                      cachedDiscoNodes.add(new DiscoveryNode("#cloud-" + endpointAddress + "-" + 0, transportAddress, Version.CURRENT.minimumCompatibilityVersion()));
+                      cachedDiscoNodes.add(transportAddress);
                     }
                   } catch (Exception e) {
                     logger.warn("failed to add endpoint {}", endpointAddress, e);
