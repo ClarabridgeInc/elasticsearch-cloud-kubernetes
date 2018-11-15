@@ -25,7 +25,7 @@
   <fileSets>
     <fileSet>
       <directory>${basedir}/src/main/plugin-metadata</directory>
-      <outputDirectory>elasticsearch</outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <includes>
         <include>plugin-security.policy</include>
       </includes>
@@ -33,7 +33,7 @@
     </fileSet>
     <fileSet>
       <directory>${basedir}/src/main/plugin-metadata</directory>
-      <outputDirectory>elasticsearch</outputDirectory>
+      <outputDirectory>/</outputDirectory>
       <includes>
         <include>plugin-descriptor.properties</include>
       </includes>
@@ -42,7 +42,6 @@
   </fileSets>
   <dependencySets>
     <dependencySet>
-      <outputDirectory>elasticsearch</outputDirectory>
       <useProjectArtifact>true</useProjectArtifact>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <excludes>
